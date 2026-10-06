@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Smart Trans — Fleet & Payroll Manager</title>
+<style>
+  :root{
+    --bg:#f4f6fb; --card:#ffffff; --ink:#1c2536; --muted:#6b7689;
+    --line:#e7ebf3; --brand:#2563eb; --brand-d:#1d4ed8;
+    --red:#dc2626; --red-bg:#fef2f2; --red-line:#fca5a5;
+    --green:#16a34a; --green-bg:#f0fdf4; --green-line:#86efac;
+    --amber:#d97706; --amber-bg:#fffbeb; --amber-line:#fcd34d;
+    --shadow:0 1px 3px rgba(16,24,40,.08),0 1px 2px rgba(16,24,40,.04);
+    --shadow-lg:0 10px 30px rgba(16,24,40,.12);
+    --radius:14px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--bg);color:var(--ink);display:flex;min-height:100vh;-webkit-font-smoothing:antialiased}
+
+  /* Sidebar */
+  .sidebar{width:240px;background:#0f1b33;color:#cdd6e8;display:flex;flex-direction:column;
+    padding:22px 14px;position:sticky;top:0;height:100vh;flex-shrink:0}
+  .logo{display:flex;align-items:center;gap:10px;padding:0 8px 22px;border-bottom:1px solid #20304f;margin-bottom:14px}
+  .logo .mark{width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,#2563eb,#22c55e);
+    display:flex;align-items:center;justify-content:center;font-weight:800;color:#fff;font-size:17px}
+  .logo b{color:#fff;font-size:16px;letter-spacing:.3px;display:block;line-height:1.1}
+  .logo span{font-size:11px;color:#7d8db0}
+  .nav button{width:100%;text-align:left;background:none;border:none;color:#aab6d0;font-size:14px;
+    padding:11px 12px;border-radius:9px;cursor:pointer;display:flex;align-items:center;gap:11px;margin-bottom:4px;font-weight:500}
+  .nav button:hover{background:#16243f;color:#fff}
+  .nav button.active{background:#2563eb;color:#fff;box-shadow:0 4px 12px rgba(37,99,235,.35)}
+  .nav .ic{width:18px;text-align:center;font-size:15px}
+  .side-foot{margin-top:auto;font-size:11px;color:#5d6b8a;padding:12px 8px 0;border-top:1px solid #20304f}
+
+  /* Main */
+  .main{flex:1;padding:28px 34px;max-width:1180px}
+  .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:22px;flex-wrap:wrap;gap:12px}
+  .topbar h1{font-size:22px;font-weight:700}
+  .topbar p{color:var(--muted);font-size:13px;margin-top:2px}
+  .actions{display:flex;gap:8px;flex-wrap:wrap}
+
+  .btn{border:none;border-radius:9px;padding:9px 15px;font-size:13.5px;font-weight:600;cursor:pointer;
+    display:inline-flex;align-items:center;gap:7px;transition:.15s}
+  .btn-primary{background:var(--brand);color:#fff}
+  .btn-primary:hover{background:var(--brand-d)}
+  .btn-ghost{background:#fff;color:var(--ink);border:1px solid var(--line)}
+  .btn-ghost:hover{border-color:#cdd5e4;background:#fafbfe}
+  .btn-danger{background:var(--red-bg);color:var(--red);border:1px solid var(--red-line)}
+  .btn-danger:hover{background:#fde4e4}
+  .btn-sm{padding:6px 11px;font-size:12.5px}
+
+  /* Cards / stats */
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:16px;margin-bottom:24px}
+  .stat{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:18px 18px;box-shadow:var(--shadow)}
+  .stat .lab{font-size:12.5px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.4px}
+  .stat .val{font-size:27px;font-weight:800;margin-top:7px}
+  .stat .sub{font-size:12px;color:var(--muted);margin-top:3px}
+  .stat.red .val{color:var(--red)} .stat.green .val{color:var(--green)} .stat.amber .val{color:var(--amber)}
+
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
+  .panel-head{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--line);gap:12px;flex-wrap:wrap}
+  .panel-head h2{font-size:16px;font-weight:700}
+  .search{position:relative}
+  .search input{border:1px solid var(--line);border-radius:9px;padding:8px 12px 8px 32px;font-size:13px;width:220px;outline:none}
+  .search input:focus{border-color:var(--brand)}
+  .search .si{position:absolute;left:10px;top:8px;color:var(--muted);font-size:13px}
+
+  /* Table */
+  table{width:100%;border-collapse:collapse}
+  th{text-align:left;font-size:11.5px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);
+    font-weight:700;padding:12px 18px;background:#fafbfe;border-bottom:1px solid var(--line);white-space:nowrap}
+  td{padding:13px 18px;font-size:13.5px;border-bottom:1px solid #f1f4f9;vertical-align:middle}
+  tbody tr:last-child td{border-bottom:none}
+  tbody tr:hover{background:#fafbff}
+  tr.row-danger{background:var(--red-bg)} tr.row-danger:hover{background:#fde7e7}
+  tr.row-warn{background:var(--amber-bg)} tr.row-warn:hover{background:#fdf4dc}
+
+  .badge{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700;white-space:nowrap}
+  .b-red{background:var(--red-bg);color:var(--red);border:1px solid var(--red-line)}
+  .b-green{background:var(--green-bg);color:var(--green);border:1px solid var(--green-line)}
+  .b-amber{background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-line)}
+  .b-gray{background:#f1f4f9;color:var(--muted);border:1px solid var(--line)}
+  .dot{width:7px;height:7px;border-radius:50%;background:currentColor}
+
+  .money{font-variant-numeric:tabular-nums;font-weight:600}
+  .money.green{color:var(--green)} .money.red{color:var(--red)}
+  .rowact button{background:none;border:none;cursor:pointer;color:var(--muted);font-size:13px;padding:4px 6px;border-radius:6px}
+  .rowact button:hover{background:#eef1f7;color:var(--ink)}
+  .rowact .del:hover{background:var(--red-bg);color:var(--red)}
+  .rowact .rcpt{color:var(--green);font-weight:600}
+  .rowact .rcpt:hover{background:var(--green-bg);color:var(--green)}
+
+  .empty{padding:48px 20px;text-align:center;color:var(--muted)}
+  .empty .big{font-size:34px;margin-bottom:8px;opacity:.5}
+
+  /* Modal */
+  .overlay{position:fixed;inset:0;background:rgba(15,27,51,.45);display:none;align-items:center;justify-content:center;z-index:50;padding:20px}
+  .overlay.open{display:flex}
+  .modal{background:#fff;border-radius:16px;box-shadow:var(--shadow-lg);width:100%;max-width:520px;overflow:hidden;animation:pop .15s ease}
+  @keyframes pop{from{transform:translateY(8px) scale(.98);opacity:0}to{transform:none;opacity:1}}
+  .modal-head{padding:18px 22px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center}
+  .modal-head h3{font-size:17px;font-weight:700}
+  .modal-head .x{background:none;border:none;font-size:20px;cursor:pointer;color:var(--muted);line-height:1}
+  .modal-body{padding:22px;display:grid;grid-template-columns:1fr 1fr;gap:15px}
+  .modal-body .full{grid-column:1/-1}
+  .fld label{display:block;font-size:12.5px;font-weight:600;color:var(--ink);margin-bottom:6px}
+  .fld input,.fld select{width:100%;border:1px solid var(--line);border-radius:9px;padding:10px 12px;font-size:14px;outline:none;font-family:inherit}
+  .fld input:focus,.fld select:focus{border-color:var(--brand);box-shadow:0 0 0 3px rgba(37,99,235,.12)}
+  .fld .hint{font-size:11px;color:var(--muted);margin-top:4px}
+  .modal-foot{padding:16px 22px;border-top:1px solid var(--line);display:flex;justify-content:flex-end;gap:9px}
+
+  .view{display:none} .view.active{display:block}
+  .alert-banner{background:var(--red-bg);border:1px solid var(--red-line);color:var(--red);border-radius:12px;
+    padding:13px 18px;margin-bottom:20px;display:none;align-items:center;gap:12px;font-size:13.5px;font-weight:600}
+  .alert-banner.show{display:flex}
+  .alert-banner .ab-ic{font-size:18px}
+
+  @media(max-width:760px){.sidebar{width:64px;padding:18px 8px}.logo b,.logo span,.nav button span.t,.side-foot{display:none}
+    .nav button{justify-content:center}.main{padding:18px}.modal-body{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+  <aside class="sidebar">
+    <div class="logo">
+      <div class="mark">ST</div>
+      <div><b>Smart Trans</b><span>Transport Services</span></div>
+    </div>
+    <nav class="nav" id="nav">
+      <button data-view="dashboard" class="active"><span class="ic">▦</span><span class="t">Dashboard</span></button>
+      <button data-view="insurance"><span class="ic">🛡</span><span class="t">Car Insurance</span></button>
+      <button data-view="salaries"><span class="ic">💵</span><span class="t">Driver Salaries</span></button>
+    </nav>
+    <div class="side-foot">Data saved on this computer.<br>Use Backup to export a copy.</div>
+  </aside>
+
+  <main class="main">
+    <!-- DASHBOARD -->
+    <section class="view active" id="view-dashboard">
+      <div class="topbar">
+        <div><h1>Dashboard</h1><p id="todayLine"></p></div>
+        <div class="actions">
+          <button class="btn btn-ghost btn-sm" onclick="exportData()">⭳ Backup</button>
+          <button class="btn btn-ghost btn-sm" onclick="document.getElementById('importFile').click()">⭱ Restore</button>
+          <input type="file" id="importFile" accept="application/json" style="display:none" onchange="importData(this)">
+        </div>
+      </div>
+      <div class="alert-banner" id="dashAlert"><span class="ab-ic">⚠</span><span id="dashAlertText"></span></div>
+      <div class="stats">
+        <div class="stat"><div class="lab">Cars Tracked</div><div class="val" id="sCars">0</div><div class="sub">total vehicles</div></div>
+        <div class="stat red"><div class="lab">Insurance Due</div><div class="val" id="sDue">0</div><div class="sub">expired or ≤10 days</div></div>
+        <div class="stat green"><div class="lab">Total Received</div><div class="val" id="sRecv">0</div><div class="sub">salaries paid out</div></div>
+        <div class="stat red"><div class="lab">Total Owed</div><div class="val" id="sOwed">0</div><div class="sub">still to pay drivers</div></div>
+      </div>
+      <div class="panel" style="margin-bottom:22px">
+        <div class="panel-head"><h2>🛡 Insurance — needs attention</h2>
+          <button class="btn btn-primary btn-sm" onclick="go('insurance')">Open insurance →</button></div>
+        <div id="dashInsList"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><h2>💵 Salaries — outstanding</h2>
+          <button class="btn btn-primary btn-sm" onclick="go('salaries')">Open salaries →</button></div>
+        <div id="dashSalList"></div>
+      </div>
+    </section>
+
+    <!-- INSURANCE -->
+    <section class="view" id="view-insurance">
+      <div class="topbar">
+        <div><h1>Car Insurance</h1><p>Rows turn <b style="color:var(--red)">red</b> when insurance is expired or expires within 10 days.</p></div>
+        <div class="actions">
+          <button class="btn btn-ghost btn-sm" onclick="downloadCarTemplate()" title="Download a blank Excel with the right columns">⭳ Excel template</button>
+          <button class="btn btn-ghost btn-sm" onclick="document.getElementById('carImportFile').click()" title="Bulk-add cars from an Excel or CSV file">⭱ Import Excel</button>
+          <input type="file" id="carImportFile" accept=".xlsx,.xls,.csv" style="display:none" onchange="importCarsExcel(this)">
+          <button class="btn btn-primary" onclick="openCar()">＋ Add Car</button>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><h2>Vehicles</h2>
+          <div class="search"><span class="si">🔍</span><input id="carSearch" placeholder="Search plate / model…" oninput="renderCars()"></div></div>
+        <div id="carTable"></div>
+      </div>
+    </section>
+
+    <!-- SALARIES -->
+    <section class="view" id="view-salaries">
+      <div class="topbar">
+        <div><h1>Driver Salaries</h1><p><b style="color:var(--green)">Received</b> shows green · <b style="color:var(--red)">remaining</b> shows red.</p></div>
+        <div class="actions"><button class="btn btn-primary" onclick="openSal()">＋ Add Salary</button></div>
+      </div>
+      <div class="stats" style="margin-bottom:18px">
+        <div class="stat green"><div class="lab">Received</div><div class="val" id="salRecv">0</div></div>
+        <div class="stat red"><div class="lab">Remaining</div><div class="val" id="salRem">0</div></div>
+        <div class="stat"><div class="lab">Records</div><div class="val" id="salCount">0</div></div>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><h2>Salary records</h2>
+          <div class="search"><span class="si">🔍</span><input id="salSearch" placeholder="Search name / month…" oninput="renderSalaries()"></div></div>
+        <div id="salTable"></div>
+      </div>
+    </section>
+  </main>
+
+  <!-- CAR MODAL -->
+  <div class="overlay" id="carModal">
+    <div class="modal">
+      <div class="modal-head"><h3 id="carModalTitle">Add Car</h3><button class="x" onclick="closeModal('carModal')">×</button></div>
+      <div class="modal-body">
+        <div class="fld full"><label>Plate number *</label><input id="c_plate" placeholder="e.g. ABC-1234"></div>
+        <div class="fld"><label>Insurance company name</label><input id="c_insurer" placeholder="e.g. AXA"></div>
+        <div class="fld"><label>Insurance policy number</label><input id="c_policy" placeholder="e.g. POL-000123"></div>
+        <div class="fld"><label>Policy cover type</label><input id="c_cover" placeholder="e.g. Comprehensive"></div>
+        <div class="fld"><label>Insurance sub policy number</label><input id="c_subpolicy" placeholder="e.g. SUB-0045"></div>
+        <div class="fld"><label>Plate registration type</label><input id="c_regtype" placeholder="e.g. Private / Commercial"></div>
+        <div class="fld"><label>Model <span style="color:var(--muted)">(optional)</span></label><input id="c_model" placeholder="e.g. Toyota Hiace"></div>
+        <div class="fld"><label>Insurance start date</label><input id="c_start" type="date"></div>
+        <div class="fld"><label>Issuance date</label><input id="c_issue" type="date"></div>
+        <div class="fld full"><label>Expiry date *</label><input id="c_expiry" type="date"><div class="hint">You'll be alerted 10 days before this date.</div></div>
+      </div>
+      <div class="modal-foot"><button class="btn btn-ghost" onclick="closeModal('carModal')">Cancel</button><button class="btn btn-primary" onclick="saveCar()">Save</button></div>
+    </div>
+  </div>
+
+  <!-- SALARY MODAL -->
+  <div class="overlay" id="salModal">
+    <div class="modal">
+      <div class="modal-head"><h3 id="salModalTitle">Add Salary</h3><button class="x" onclick="closeModal('salModal')">×</button></div>
+      <div class="modal-body">
+        <div class="fld"><label>First name *</label><input id="s_first" placeholder="e.g. John"></div>
+        <div class="fld"><label>Last name *</label><input id="s_last" placeholder="e.g. Smith"></div>
+        <div class="fld"><label>Month *</label><select id="s_month"></select></div>
+        <div class="fld"><label>Year</label><input id="s_year" type="number" placeholder="2026"></div>
+        <div class="fld"><label>Total salary</label><input id="s_total" type="number" min="0" step="0.01" placeholder="0.00"></div>
+        <div class="fld"><label>Received</label><input id="s_recv" type="number" min="0" step="0.01" placeholder="0.00"></div>
+        <div class="fld full"><div class="hint" id="s_preview">Remaining will be calculated automatically.</div></div>
+      </div>
+      <div class="modal-foot"><button class="btn btn-ghost" onclick="closeModal('salModal')">Cancel</button><button class="btn btn-primary" onclick="saveSal()">Save</button></div>
+    </div>
+  </div>
+
+<!-- Bundled offline libraries: SheetJS (Excel read/write) + jsPDF (receipt PDFs). No internet needed. -->
+<script src="vendor/xlsx.full.min.js"></script>
+<script src="vendor/jspdf.umd.min.js"></script>
+<script>
+const WARN_DAYS = 10;
+const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+const KEY_CARS = "smarttrans_cars_v1";
+const KEY_SAL  = "smarttrans_salaries_v1";
+const KEY_SEED = "smarttrans_seed_v1";
+
+/* Default car-insurance register imported from All_Car_Insurance_Details.xlsx (118 rows, verbatim). */
+const DEFAULT_CARS = [{"plate":"2535 AJB","insurer":"insurance Policy Number","policyNo":"100-CT-2026-11892120-000","subPolicyNo":"100-CT-2026-11892120- 000 33","coverType":"third party insurance","regType":"private transport","model":"","issuanceDate":"2026-02-08","startDate":"2026-02-08","expiry":"2027-01-06"},{"plate":"6871 JJB","insurer":"insurance Policy Number","policyNo":"100-CT-2026-11892120-000","subPolicyNo":"100-CT-2026-11892120- 000 54","coverType":"third party insurance","regType":"private transport","model":"","issuanceDate":"2026-03-09","startDate":"2026-03-09","expiry":"2027-01-06"},{"plate":"3318 JTB","insurer":"","policyNo":"","subPolicyNo":"Company iglaill (polill Cover Name Type","coverType":"third party insurance","regType":"private transport","model":"","issuanceDate":"2026-02-08","startDate":"2027-01-06","expiry":"2026-02-08"},{"plate":"2112 KLA","insurer":"Insurance Policy Number","policyNo":"100-CT-2026-11892120-000","subPolicyNo":"100-CT-2026-11892120- 000 52","coverType":"third party insurance","regType":"private transport","model":"","issuanceDate":"2026-03-05","startDate":"2026-03-05","expiry":"2027-01-06"},{"plate":"7418 WKA","insurer":"","policyNo":"100-CT-2026-11892120-000","subPolicyNo":"100-CT-2026-11892120- 000 53","coverType":"third party insurance","regType":"private transport","model":"","issuanceDate":"2026-03-09","startDate":"2026-03-09","expiry":"2027-01-06"},{"plate":"","insurer":"insurance Policy Number","policyNo":"100-CT-2026-11892120-000","subPolicyNo":"100-CT-2026-11892120- 000 89","coverType":"third party insurance","regType":"private transport","model":"","issuanceDate":"2026-03-16","startDate":"2026-03-16","expiry":"2027-01-06"},{"plate":"3135 NUA","insurer":"insurance Policy Number","policyNo":"100-CT-2026-11892120-000","subPolicyNo":"100-CT-2026-11892120- 000 88","coverType":"third party insurance","regType":"private transport","model":"","issuanceDate":"2026-03-16","startDate":"2026-03-16","expiry":"2027-01-06"},{"plate":"2758 KHA","insurer":"insurance Policy Number","policyNo":"100-CT-2026-11892120-000","subPolicyNo":"100-CT-2026-11892120- 000 37","coverType":"third party insurance","regType":"private transport","model":"","issuanceDate":"2026-03-16","startDate":"2026-03-16","expiry":"2027-01-06"},{"plate":"4276 LNA","insurer":"insurance Policy Number","policyNo":"100-CT-2026-11892120-000","subPolicyNo":"100-CT-2026-11892120- 000 86","coverType":"third party insurance","regType":"private transport","model":"","issuanceDate":"2026-03-16","startDate":"2026-03-16","expiry":"2027-01-06"},{"plate":"6105 VHA","insurer":"insurance Policy Number","policyNo":"100-CT-2026-11892120-000","subPolicyNo":"100-CT-2026-11392120- 000 85","coverType":"third party insurance","regType":"private transport","model":"","issuanceDate":"2026-03-16","startDate":"2026-03-16","expiry":"2027-01-06"},{"plate":"8563 UNA","insurer":"insurance Policy Number","policyNo":"","subPolicyNo":"100-CT-2026-11892120- O00 84","coverType":"third party insurance","regType":"private transport","model":"","issuanceDate":"2026-03-16","startDate":"2026-03-16","expiry":"2027-01-06"},{"plate":"","insurer":"","policyNo":"100-CT-2026-11892120-000","subPolicyNo":"100-CT-2026-11892120- 000 83","coverType":"third party insurance","regType":"private transport","model":"","issuanceDate":"2026-03-16","startDate":"2026-03-16","expiry":"2027-01-06"},{"plate":"","insurer":"","policyNo":"100-CT-2026-11892120-000","subPolicyNo":"","coverType":"","regType":"private transport","model":"","issuanceDate":"2026-03-16","startDate":"2026-03-16","expiry":"2027-01-06"},{"plate":"","insurer":"","policyNo":"100-CT-2026-11892120-000","subPolicyNo":"100-CT-2026-11892120- 000 81","coverType":"third party insurance","regType":"private transport","model":"","issuanceDate":"2026-03-16","startDate":"2026-03-16","expiry":"2027-01-06"},{"plate":"3535 ZNA","insurer":"insurance Policy Number","policyNo":"100-CT-2026-11892120-000","subPolicyNo":"100-CT-2026-11892120- 000 71","coverType":"third party insurance","regType":"private transport","model":"","issuanceDate":"2026-03-16","startDate":"2026-03-16","expiry":"2027-01-06"},{"plate":"","insurer":"","policyNo":"100-CT-2026-11892120-000","subPolicyNo":"","coverType":"","regType":"private transport","model":"","issuanceDate":"2026-03-16","startDate":"2026-03-16","expiry":"2027-01-06"},{"plate":"","insurer":"","policyNo":"P/CRO1/2026/CTC/0000083","subPolicyNo":"P/CRO 1/2026/CTC/0000083/54","coverType":"third party insurance","regType":"private transport","model":"","issuanceDate":"2026-03-25","startDate":"2026-03-26","expiry":"2027-03-25"},{"plate":"4750 ROA","insurer":"insurance Policy Number","policyNo":"5/2/115/2025","subPolicyNo":"5/2/115/2025-42","coverType":"third party insurance","regType":"private transport","model":"","issuanceDate":"2025-09-10","startDate":"2025-09-10","expiry":"2026-08-31"},{"plate":"","insurer":"","policyNo":"P/91/3803/2026/6","subPolicyNo":"P/91/3803/2026/6/4","coverType":"third party insurance","regType":"private transport","model":"","issuanceDate":"2026-01-12","startDate":"2026-01-12","expiry":"2027-01-11"},{"plate":"","insurer":"insurance Policy Number","policyNo":"P/102/5026/2026/2702547","subPolicyNo":"","coverType":"third party insurance","regType":"private transport","model":"","issuanceDate":"2026-03-08","startDate":"2026-03-09","expiry":"2027-03-08"},{"plate":"89332 ZDB","insurer":"","policyNo":"5/2/115/2025","subPolicyNo":"5/2/115/2025-272","coverType":"third party insurance","regType":"private transport","model":"","issuanceDate":"2025-12-11","startDate":"2025-12-11","expiry":"2026-08-31"},{"plate":"7625 JHA","insurer":"","policyNo":"5/2/115/2025","subPolicyNo":"§/2/115/2025-43","coverType":"third party insurance","regType":"private transport","model":"","issuanceDate":"2025-09-10","startDate":"2025-09-10","expiry":"2026-08-31"},{"plate":"","insurer":"insurance Policy Number","policyNo":"MFT-7388879-00-0-1","subPolicyNo":"01239","coverType":"third party insurance","regType":"private transport","model":"","issuanceDate":"2025-09-24","startDate":"2025-09-24","expiry":"2026-09-23"},{"plate":"","insurer":"","policyNo":"MFT-7388879-00-0-1","subPolicyNo":"01256","coverType":"third party insurance","regType":"private transport","model":"","issuanceDate":"2025-09-24","startDate":"","expiry":"2025-09-24"},{"plate":"","insurer":"","policyNo":"MFT-7388879-00-0-1","subPolicyNo":"","coverType":"","regType":"private transport","model":"","issuanceDate":"2025-09-24","startDate":"","expiry":""},{"plate":"","insurer":"insurance Policy Number","policyNo":"MFT-7388879-00-0-1","subPolicyNo":"01235","coverType":"third party insurance","regType":"private transport","model":"","issuanceDate":"2025-09-24","startDate":"2025-09-24","expiry":"2026-09-23"},{"plate":"","insurer":"","policyNo":"MFT-7388879-00-0-1","subPolicyNo":"01236","coverType":"third party insurance","regType":"private transport","model":"","issuanceDate":"2025-09-24","startDate":"2025-09-24","expiry":"2026-09-23"},{"plate":"","insurer":"insurance Policy hurber","policyNo":"MFT-7388879-00-0-1","subPolicyNo":"01241","coverType":"third party insurance","regType":"private transport","model":"","issuanceDate":"2025-09-24","startDate":"2025-09-24","expiry":"2026-09-23"},{"plate":"","insurer":"","policyNo":"","subPolicyNo":"","coverType":"","regType":"","model":"","issuanceDate":"","startDate":"","expiry":""},{"plate":"","insurer":"insurance Policy Number","policyNo":"MFT-7388879-00-0-1","subPolicyNo":"","coverType":"third party insurance","regType":"private transport","model":"","issuanceDate":"2025-09-24","startDate":"2025-09-24","expiry":"2026-09-23"},{"plate":"2540 SGB","insurer":"insurance Polkcy Number","policyNo":"MFT-7383879-00-0-1","subPolicyNo":"01252","coverType":"third party insurance","regType":"private transport","model":"","issuanceDate":"2025-09-24","startDate":"2025-09-24","expiry":"2026-09-23"},{"plate":"","insurer":"","policyNo":"","subPolicyNo":"","coverType":"","regType":"","model":"","issuanceDate":"","startDate":"","expiry":""},{"plate":"2505 SGB","insurer":"","policyNo":"MFT-7388879-00-0-1","subPolicyNo":"01259","coverType":"third party insurance","regType":"private transport","model":"","issuanceDate":"2025-09-24","startDate":"2025-09-24","expiry":"2026-08-23"},{"plate":"3852 TJS","insurer":"","policyNo":"MFT-7707763-00-0-1","subPolicyNo":"015","coverType":"third party insurance","regType":"private transport","model":"","issuanceDate":"2026-03-05","startDate":"2026-03-05","expiry":"2027-01-28"},{"plate":"","insurer":"Insurance Policy Number","policyNo":"P/102/5026/2026/2713209","subPolicyNo":"","coverType":"third party insurance","regType":"private transport","model":"","issuanceDate":"2026-03-17","startDate":"2026-03-18","expiry":"2027-03-17"},{"plate":"26686 TES","insurer":"jJasurance Policy Number","policyNo":"MFT-7707763-00-0-1","subPolicyNo":"014","coverType":"third party insurance","regType":"private transport","model":"","issuanceDate":"2026-03-05","startDate":"2026-03-05","expiry":"2027-01-28"},{"plate":"","insurer":"","policyNo":"P/102/5026/2026/2660526","subPolicyNo":"","coverType":"third party insurance","regType":"private transport","model":"","issuanceDate":"2026-02-08","startDate":"2026-02-09","expiry":"2027-02-06"},{"plate":"","insurer":"Insurance Policy Number","policyNo":"P/102/5026/2026/2660554","subPolicyNo":"","coverType":"third party insurance","regType":"private transport","model":"","issuanceDate":"2026-02-08","startDate":"2026-02-09","expiry":"2027-02-08"},{"plate":"2611 ABB","insurer":"","policyNo":"","subPolicyNo":"","coverType":"","regType":"","model":"","issuanceDate":"","startDate":"","expiry":""},{"plate":"2365 NZA","insurer":"","policyNo":"MFT-7707763-00-0-1","subPolicyNo":"013","coverType":"third party insurance","regType":"private transport","model":"","issuanceDate":"2026-03-05","startDate":"2026-03-05","expiry":"2027-01-28"},{"plate":"4555 RJS","insurer":"insurance Nurmmber","policyNo":"P/102/5026/2026/2660526","subPolicyNo":"","coverType":"third party insurance","regType":"private transport","model":"","issuanceDate":"2026-02-08","startDate":"2026-02-09","expiry":"2027-02-08"},{"plate":"4840 JVA","insurer":"","policyNo":"","subPolicyNo":"","coverType":"","regType":"","model":"","issuanceDate":"","startDate":"","expiry":""},{"plate":"17017 XNA","insurer":"","policyNo":"MFT-7707763-00-0-1","subPolicyNo":"Company Grgsuull GLI Spi Cover Name layla wssipall Type","coverType":"third party insurance","regType":"private transport","model":"","issuanceDate":"2026-03-09","startDate":"2027-01-28","expiry":"2026-03-09"},{"plate":"1402 EAB","insurer":"","policyNo":"P/102/5026/2026/2660526","subPolicyNo":"","coverType":"third party insurance","regType":"private transport","model":"","issuanceDate":"2026-02-08","startDate":"2026-02-09","expiry":"2027-02-08"},{"plate":"7376 TUA","insurer":"insurance Pobcy Number","policyNo":"MFT-7545617-00-0-1","subPolicyNo":"0124","coverType":"third party insurance","regType":"private transport","model":"","issuanceDate":"2026-02-10","startDate":"2026-02-10","expiry":"2026-12-03"},{"plate":"3287 EDA","insurer":"","policyNo":"P/102/5026/2025/2534655","subPolicyNo":"","coverType":"third party insurance","regType":"public transport","model":"","issuanceDate":"2025-11-25","startDate":"2025-11-26","expiry":"2026-11-25"},{"plate":"","insurer":"","policyNo":"","subPolicyNo":"","coverType":"","regType":"","model":"","issuanceDate":"","startDate":"","expiry":""},{"plate":"","insurer":"Insurance Policy Number","policyNo":"P/102/5026/2026/27","subPolicyNo":"","coverType":"third party insurance","regType":"private transport","model":"","issuanceDate":"2026-03-16","startDate":"2026-03-16","expiry":"2027-03-15"},{"plate":"","insurer":"","policyNo":"P/102/5026/2026/2712039","subPolicyNo":"Company Sulu ) giglaill quell Cover Name ( Type","coverType":"third party insurance","regType":"private transport","model":"","issuanceDate":"2026-03-16","startDate":"2027-03-15","expiry":"2026-03-16"},{"plate":"68534 HAB","insurer":"insurance Number","policyNo":"100-CT-2026-11892120-000","subPolicyNo":"","coverType":"","regType":"private transport","model":"","issuanceDate":"2026-03-09","startDate":"2026-03-09","expiry":"2027-01-06"},{"plate":"4037 XVA","insurer":"","policyNo":"P/102/5026/2026/2705947","subPolicyNo":"","coverType":"third party insurance","regType":"private transport","model":"","issuanceDate":"2027-03-10","startDate":"","expiry":"2026-03-11"},{"plate":"","insurer":"","policyNo":"","subPolicyNo":"","coverType":"third party insurance","regType":"","model":"","issuanceDate":"2026-03-16","startDate":"2026-03-16","expiry":"2027-03-15"},{"plate":"5160 TTB","insurer":"insurance Policy Number","policyNo":"54439701","subPolicyNo":"29861115","coverType":"third party insurance","regType":"private transport","model":"","issuanceDate":"2026-03-12","startDate":"2026-03-12","expiry":"2027-03-11"},{"plate":"3005 XAB","insurer":"","policyNo":"P/102/5026/2026/2705947","subPolicyNo":"","coverType":"third party insurance","regType":"private transport","model":"","issuanceDate":"2026-03-10","startDate":"2026-03-11","expiry":"2027-03-10"},{"plate":"2511 LAB","insurer":"","policyNo":"","subPolicyNo":"","coverType":"","regType":"","model":"","issuanceDate":"","startDate":"","expiry":""},{"plate":"","insurer":"","policyNo":"","subPolicyNo":"","coverType":"","regType":"","model":"","issuanceDate":"","startDate":"","expiry":""},{"plate":"","insurer":"","policyNo":"","subPolicyNo":"","coverType":"","regType":"","model":"","issuanceDate":"","startDate":"","expiry":""},{"plate":"2812 GBB","insurer":"","policyNo":"","subPolicyNo":"Company Cover Name Type","coverType":"third party insurance","regType":"private transport","model":"","issuanceDate":"2026-03-29","startDate":"2027-02-15","expiry":"2026-03-29"},{"plate":"7132 SKA","insurer":"","policyNo":"","subPolicyNo":"","coverType":"","regType":"","model":"","issuanceDate":"","startDate":"","expiry":""},{"plate":"2036 BGA","insurer":"","policyNo":"","subPolicyNo":"","coverType":"","regType":"","model":"","issuanceDate":"","startDate":"","expiry":""},{"plate":"2756 SHA","insurer":"","policyNo":"P-01-2026","subPolicyNo":"(chins) gigheill jrolill Cover Type P-01-2026-4-416-","coverType":"third party insurance","regType":"private transport","model":"","issuanceDate":"2026-01-07","startDate":"2027-01-07","expiry":"2026-01-08"},{"plate":"","insurer":"","policyNo":"","subPolicyNo":"P/91/3803/2026/41/39","coverType":"third party insurance","regType":"private transport","model":"","issuanceDate":"2026-02-26","startDate":"","expiry":""},{"plate":"","insurer":"","policyNo":"","subPolicyNo":"","coverType":"","regType":"private transport","model":"","issuanceDate":"2026-01-29","startDate":"2026-01-29","expiry":"2026-12-29"},{"plate":"","insurer":"","policyNo":"MFT-7481047-00-0-1","subPolicyNo":"0172","coverType":"third party insurance","regType":"private transport","model":"","issuanceDate":"2025-11-25","startDate":"2025-11-25","expiry":"2026-11-02"},{"plate":"","insurer":"","policyNo":"","subPolicyNo":"188","coverType":"third party insurance","regType":"private transport","model":"","issuanceDate":"2026-02-21","startDate":"2026-02-21","expiry":"2027-02-15"},{"plate":"","insurer":"","policyNo":"MFT-7481047-00-0-1","subPolicyNo":"0175","coverType":"third party insurance","regType":"private transport","model":"","issuanceDate":"2025-11-25","startDate":"2025-11-25","expiry":"2026-11-02"},{"plate":"2036 BGA","insurer":"","policyNo":"","subPolicyNo":"P/91/3803/2025/48/42","coverType":"third party insurance","regType":"private transport","model":"","issuanceDate":"2026-01-21","startDate":"2026-01-21","expiry":"2026-12-29"},{"plate":"","insurer":"","policyNo":"P0625-MTI","subPolicyNo":"Company wvglaull Cover Name Type","coverType":"third party insurance","regType":"private transport","model":"","issuanceDate":"2025-06-26","startDate":"2026-06-26","expiry":"2025-06-27"},{"plate":"","insurer":"","policyNo":"P0326-MTI","subPolicyNo":"","coverType":"","regType":"private transport","model":"","issuanceDate":"2026-03-16","startDate":"2026-03-17","expiry":"2027-03-16"},{"plate":"4205 BIB","insurer":"","policyNo":"","subPolicyNo":"","coverType":"","regType":"","model":"","issuanceDate":"","startDate":"","expiry":""},{"plate":"","insurer":"","policyNo":"5/2/115/2025","subPolicyNo":"","coverType":"","regType":"private transport","model":"","issuanceDate":"2026-03-24","startDate":"2026-03-24","expiry":"2026-08-31"},{"plate":"3287 EDA","insurer":"insurance Policy Number","policyNo":"P/102/5026/2025/2534655","subPolicyNo":"","coverType":"third party insurance","regType":"public transport","model":"","issuanceDate":"2025-11-25","startDate":"2025-11-26","expiry":"2026-11-25"},{"plate":"","insurer":"","policyNo":"","subPolicyNo":"29861117","coverType":"third party insurance","regType":"private transport","model":"","issuanceDate":"2026-03-12","startDate":"2026-03-12","expiry":"2027-03-11"},{"plate":"","insurer":"","policyNo":"54439701","subPolicyNo":"","coverType":"","regType":"private transport","model":"","issuanceDate":"2026-03-12","startDate":"2026-03-12","expiry":"2027-03-11"},{"plate":"","insurer":"insurance Policy Number","policyNo":"","subPolicyNo":"","coverType":"","regType":"private transport","model":"","issuanceDate":"2026-03-12","startDate":"2026-03-12","expiry":"2027-03-11"},{"plate":"","insurer":"Insurance Policy Number","policyNo":"P/102/5026/2026/2705947","subPolicyNo":"","coverType":"third party insurance","regType":"","model":"","issuanceDate":"2026-03-10","startDate":"","expiry":"2027-03-10"},{"plate":"2533 NVA","insurer":"","policyNo":"54439701","subPolicyNo":"29861122","coverType":"third party insurance","regType":"private transport","model":"","issuanceDate":"2026-03-12","startDate":"2026-03-12","expiry":"2027-03-11"},{"plate":"","insurer":"","policyNo":"P/102/5026/2026/2705947","subPolicyNo":"Cover Type","coverType":"third party insurance","regType":"private transport","model":"","issuanceDate":"2026-03-10","startDate":"2026-03-11","expiry":"2027-03-10"},{"plate":"","insurer":"","policyNo":"","subPolicyNo":"","coverType":"","regType":"","model":"","issuanceDate":"","startDate":"","expiry":""},{"plate":"","insurer":"insurance Policy Number","policyNo":"54439701","subPolicyNo":"29861090","coverType":"third party insurance","regType":"private transport","model":"","issuanceDate":"2026-03-12","startDate":"2026-03-12","expiry":"2027-03-11"},{"plate":"","insurer":"","policyNo":"","subPolicyNo":"29861120","coverType":"third party insurance","regType":"private transport","model":"","issuanceDate":"2027-03-11","startDate":"","expiry":"2026-03-12"},{"plate":"8821 KAB","insurer":"","policyNo":"P/102/5026/2026/2705947","subPolicyNo":"Cover Type","coverType":"third party insurance","regType":"private transport","model":"","issuanceDate":"2026-03-11","startDate":"","expiry":""},{"plate":"","insurer":"","policyNo":"P/102/5026/2026/2705947","subPolicyNo":"stub ) giglsill guolil = Cover ( Type P/102/5026/2026/2705947-","coverType":"third party insurance","regType":"private transport","model":"","issuanceDate":"2026-03-10","startDate":"2027-03-10","expiry":"2026-03-11"},{"plate":"","insurer":"","policyNo":"54439701","subPolicyNo":"Company Cover Name Type","coverType":"third party insurance","regType":"private transport","model":"","issuanceDate":"2026-03-12","startDate":"2027-03-11","expiry":"2026-03-12"},{"plate":"","insurer":"","policyNo":"P/102/5026/2026/2705947","subPolicyNo":"","coverType":"third party insurance","regType":"private transport","model":"","issuanceDate":"2026-03-16","startDate":"2026-03-11","expiry":"2027-03-10"},{"plate":"1989 JUA","insurer":"","policyNo":"","subPolicyNo":"29861114","coverType":"third party insurance","regType":"private transport","model":"","issuanceDate":"2026-03-12","startDate":"2026-03-12","expiry":"2027-03-11"},{"plate":"","insurer":"insurance Policy Number","policyNo":"P/102/5026/2026/2705947","subPolicyNo":"","coverType":"third party insurance","regType":"private transport","model":"","issuanceDate":"2026-03-10","startDate":"2026-03-11","expiry":"2027-03-10"},{"plate":"","insurer":"insurance Policy Number","policyNo":"P/102/5026/2026/2705947","subPolicyNo":"","coverType":"third party insurance","regType":"private transport","model":"","issuanceDate":"2026-03-10","startDate":"2026-03-11","expiry":"2027-03-10"},{"plate":"","insurer":"","policyNo":"P/102/5026/2026/2705947","subPolicyNo":"","coverType":"third party insurance","regType":"private transport","model":"","issuanceDate":"2026-03-11","startDate":"","expiry":""},{"plate":"","insurer":"","policyNo":"","subPolicyNo":"41/1/298652/2025-1","coverType":"third party insurance","regType":"private transport","model":"","issuanceDate":"2025-09-05","startDate":"","expiry":""},{"plate":"73982 EXB","insurer":"","policyNo":"","subPolicyNo":"","coverType":"","regType":"","model":"","issuanceDate":"","startDate":"","expiry":""},{"plate":"3640 LVA","insurer":"","policyNo":"P/102/5026/2026/2705947","subPolicyNo":"Cover Type","coverType":"third party insurance","regType":"private transport","model":"","issuanceDate":"2026-03-10","startDate":"2026-03-11","expiry":"2027-03-16"},{"plate":"","insurer":"","policyNo":"P/102/5026/2026/2705947","subPolicyNo":"gSalu } gigloill juolill ( P/102/5026/2026/2705947- 3","coverType":"third party insurance","regType":"private transport","model":"","issuanceDate":"2027-03-10","startDate":"","expiry":""},{"plate":"","insurer":"insurance Polcy Number","policyNo":"","subPolicyNo":"13933549725","coverType":"third party insurance","regType":"private transport","model":"","issuanceDate":"2025-07-13","startDate":"2025-07-15","expiry":"2026-07-14"},{"plate":"8027 KDA","insurer":"","policyNo":"","subPolicyNo":"","coverType":"","regType":"","model":"","issuanceDate":"","startDate":"","expiry":""},{"plate":"","insurer":"insurance Policy Number","policyNo":"P/102/5026/2026/2705947","subPolicyNo":"","coverType":"","regType":"private transport","model":"","issuanceDate":"2026-03-10","startDate":"2026-03-11","expiry":"2027-03-10"},{"plate":"8235 BSB","insurer":"","policyNo":"P/102/5026/2026/2705947","subPolicyNo":"Company aSulu ) ovglaill quoliJ Cover Name ( Type","coverType":"third party insurance","regType":"private transport","model":"","issuanceDate":"2026-03-10","startDate":"2027-03-10","expiry":"2026-03-11"},{"plate":"1835 ALA","insurer":"","policyNo":"","subPolicyNo":"","coverType":"","regType":"","model":"","issuanceDate":"","startDate":"","expiry":""},{"plate":"","insurer":"","policyNo":"54439701","subPolicyNo":"Company Cover Name Type","coverType":"third party insurance","regType":"private transport","model":"","issuanceDate":"2026-03-12","startDate":"2027-03-11","expiry":"2026-03-12"},{"plate":"5216 XAB","insurer":"insurance Number","policyNo":"P-0100-26","subPolicyNo":"P-0100-26-5026- 0002338/000003","coverType":"third party insurance","regType":"private transport","model":"","issuanceDate":"2026-06-20","startDate":"2026-06-21","expiry":"2027-06-20"},{"plate":"","insurer":"","policyNo":"","subPolicyNo":"","coverType":"","regType":"","model":"","issuanceDate":"2027-02-15","startDate":"","expiry":""},{"plate":"4035 VKA","insurer":"","policyNo":"","subPolicyNo":"914","coverType":"third party insurance","regType":"private transport","model":"","issuanceDate":"2026-06-21","startDate":"2026-06-21","expiry":"2027-02-15"},{"plate":"","insurer":"","policyNo":"P-0100-26","subPolicyNo":"P-0100-26-5026- 0002250/000001","coverType":"third party insurance","regType":"private transport","model":"","issuanceDate":"2026-06-20","startDate":"","expiry":"2026-06-21"},{"plate":"3771 JUS","insurer":"","policyNo":"","subPolicyNo":"42","coverType":"third party insurance","regType":"private transport","model":"","issuanceDate":"2026-06-21","startDate":"2026-06-21","expiry":"2027-05-12"},{"plate":"","insurer":"","policyNo":"","subPolicyNo":"","coverType":"third party insurance","regType":"","model":"","issuanceDate":"","startDate":"","expiry":""},{"plate":"","insurer":"","policyNo":"SIVX/31100","subPolicyNo":"Cover Type","coverType":"third party insurance","regType":"private transport","model":"","issuanceDate":"2026-06-21","startDate":"","expiry":""},{"plate":"3881 KLA","insurer":"","policyNo":"","subPolicyNo":"Company Cover Type","coverType":"third party insurance","regType":"private transport","model":"","issuanceDate":"2026-06-21","startDate":"","expiry":""},{"plate":"","insurer":"","policyNo":"IVUS24/0","subPolicyNo":"","coverType":"third party insurance","regType":"public transport","model":"","issuanceDate":"2026-06-21","startDate":"2026-06-21","expiry":"2027-05-12"},{"plate":"","insurer":"","policyNo":"IVUS24/0","subPolicyNo":"38","coverType":"third party insurance","regType":"public transport","model":"","issuanceDate":"2026-06-21","startDate":"2026-06-21","expiry":"2027-05-12"},{"plate":"","insurer":"","policyNo":"","subPolicyNo":"Cover Type","coverType":"third party insurance","regType":"private transport","model":"","issuanceDate":"2027-05-18","startDate":"","expiry":"2026-06-21"},{"plate":"","insurer":"","policyNo":"","subPolicyNo":"159","coverType":"third party insurance","regType":"private transport","model":"","issuanceDate":"2026-06-21","startDate":"2026-06-21","expiry":"2027-04-29"},{"plate":"","insurer":"","policyNo":"","subPolicyNo":"162","coverType":"third party insurance","regType":"private transport","model":"","issuanceDate":"2026-06-21","startDate":"2026-06-21","expiry":"2027-04-29"},{"plate":"4231 BAE","insurer":"","policyNo":"","subPolicyNo":"","coverType":"","regType":"","model":"","issuanceDate":"2026-06-21","startDate":"","expiry":"2027-04-23"},{"plate":"","insurer":"","policyNo":"","subPolicyNo":"Coy igi! Type Sera WCE PICRO12028/CTC0000083","coverType":"third party insurance","regType":"private transport","model":"","issuanceDate":"2026-06-21","startDate":"","expiry":"2026-08-22"},{"plate":"","insurer":"","policyNo":"","subPolicyNo":"","coverType":"third party insurance","regType":"private transport","model":"","issuanceDate":"2026-05-21","startDate":"","expiry":"2027-03-25"},{"plate":"","insurer":"","policyNo":"P/CRO1/2026/CTC/0000083","subPolicyNo":"Name Type nsurance P/CRO1/2026/CTC/0000083","coverType":"third party insurance","regType":"private transport","model":"","issuanceDate":"2026-06-21","startDate":"2027-03-25","expiry":"2026-06-22"},{"plate":"","insurer":"","policyNo":"","subPolicyNo":"Compa wiglull Type TSuTance P/ICRO1/2026/CTC/0000083","coverType":"third party insurance","regType":"private transport","model":"","issuanceDate":"2026-06-21","startDate":"2027-03-25","expiry":"2026-06-22"},{"plate":"","insurer":"","policyNo":"","subPolicyNo":"","coverType":"third party insurance","regType":"private transport","model":"","issuanceDate":"2028-06-21","startDate":"","expiry":"2028-06-22"}];
+
+let cars = load(KEY_CARS);
+let sals = load(KEY_SAL);
+let editCarId = null, editSalId = null;
+
+// First run only: pre-load the register above. Runs once; never clobbers data you've already entered.
+if(cars.length===0 && localStorage.getItem(KEY_SEED)!=='1'){
+  cars = DEFAULT_CARS.map(c=>({id:uid(),...c}));
+  localStorage.setItem(KEY_SEED,'1');
+  localStorage.setItem(KEY_CARS,JSON.stringify(cars));
+}
+
+function load(k){ try{return JSON.parse(localStorage.getItem(k))||[]}catch(e){return []} }
+function save(){ localStorage.setItem(KEY_CARS,JSON.stringify(cars)); localStorage.setItem(KEY_SAL,JSON.stringify(sals)); }
+function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
+function fmt(n){ n=Number(n)||0; return n.toLocaleString(undefined,{minimumFractionDigits:0,maximumFractionDigits:2}); }
+function esc(s){ return String(s??"").replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+function daysUntil(iso){ if(!iso) return null; const d=new Date(iso+"T00:00:00"); const t=new Date(); t.setHours(0,0,0,0); return Math.round((d-t)/86400000); }
+function dispDate(iso){ if(!iso) return "—"; const [y,m,d]=iso.split("-"); return `${d}/${m}/${y}`; }
+
+/* ---------- navigation ---------- */
+function go(v){
+  document.querySelectorAll('.view').forEach(s=>s.classList.remove('active'));
+  document.getElementById('view-'+v).classList.add('active');
+  document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('active',b.dataset.view===v));
+  if(v==='dashboard') renderDash();
+}
+document.getElementById('nav').addEventListener('click',e=>{const b=e.target.closest('button');if(b)go(b.dataset.view);});
+
+/* ---------- insurance ---------- */
+function carStatus(c){
+  const d = daysUntil(c.expiry);
+  if(d===null) return {tag:'b-gray',cls:'',text:'No date',d:9999};
+  if(d<0) return {tag:'b-red',cls:'row-danger',text:`Expired ${Math.abs(d)}d ago`,d};
+  if(d<=WARN_DAYS) return {tag:'b-red',cls:'row-danger',text:`Due in ${d}d`,d};
+  if(d<=30) return {tag:'b-amber',cls:'row-warn',text:`In ${d}d`,d};
+  return {tag:'b-green',cls:'',text:`OK · ${d}d`,d};
+}
+function renderCars(){
+  const q=(document.getElementById('carSearch').value||"").toLowerCase();
+  const list=[...cars].map(c=>({c,s:carStatus(c)})).sort((a,b)=>a.s.d-b.s.d)
+    .filter(({c})=>!q||[c.plate,c.model,c.insurer,c.policyNo,c.subPolicyNo,c.coverType,c.regType].join(" ").toLowerCase().includes(q));
+  const el=document.getElementById('carTable');
+  if(!cars.length){ el.innerHTML=emptyState('🛡','No cars yet','Click “Add Car”, or use “Import Excel”, to track your first vehicle’s insurance.'); return; }
+  let rows=list.map(({c,s})=>`<tr class="${s.cls}">
+    <td><b>${esc(c.plate)}</b></td>
+    <td>${esc(c.insurer)||'—'}</td>
+    <td>${esc(c.policyNo)||'—'}</td>
+    <td>${esc(c.coverType)||'—'}</td>
+    <td class="money">${dispDate(c.expiry)}</td>
+    <td><span class="badge ${s.tag}"><span class="dot"></span>${s.text}</span></td>
+    <td class="rowact" style="text-align:right;white-space:nowrap">
+      <button onclick="openCar('${c.id}')">✎ Edit</button>
+      <button class="del" onclick="delCar('${c.id}')">🗑</button></td></tr>`).join("");
+  el.innerHTML=`<table><thead><tr><th>Plate</th><th>Insurer</th><th>Policy No.</th><th>Cover</th><th>Expiry</th><th>Status</th><th></th></tr></thead><tbody>${rows||emptyRow(7)}</tbody></table>`;
+}
+function openCar(id){
+  editCarId=id||null;
+  document.getElementById('carModalTitle').textContent=id?'Edit Car':'Add Car';
+  const c=id?cars.find(x=>x.id===id):{};
+  c_plate.value=c.plate||""; c_insurer.value=c.insurer||""; c_policy.value=c.policyNo||"";
+  c_cover.value=c.coverType||""; c_subpolicy.value=c.subPolicyNo||""; c_regtype.value=c.regType||"";
+  c_model.value=c.model||""; c_start.value=c.startDate||""; c_issue.value=c.issuanceDate||""; c_expiry.value=c.expiry||"";
+  document.getElementById('carModal').classList.add('open');
+}
+function saveCar(){
+  const plate=c_plate.value.trim();
+  if(!plate){alert('Please enter a plate number.');return;}
+  if(!c_expiry.value){alert('Please choose the insurance expiry date.');return;}
+  const data={plate, insurer:c_insurer.value.trim(), policyNo:c_policy.value.trim(),
+    coverType:c_cover.value.trim(), subPolicyNo:c_subpolicy.value.trim(), regType:c_regtype.value.trim(),
+    model:c_model.value.trim(), startDate:c_start.value, issuanceDate:c_issue.value, expiry:c_expiry.value};
+  if(editCarId){Object.assign(cars.find(x=>x.id===editCarId),data);}
+  else{cars.push({id:uid(),...data});}
+  save(); closeModal('carModal'); renderCars(); renderDash();
+}
+function delCar(id){ if(confirm('Delete this car?')){cars=cars.filter(x=>x.id!==id);save();renderCars();renderDash();} }
+
+/* ---------- salaries ---------- */
+function renderSalaries(){
+  const q=(document.getElementById('salSearch').value||"").toLowerCase();
+  const el=document.getElementById('salTable');
+  let recv=0,rem=0;
+  sals.forEach(s=>{recv+=Number(s.received)||0; rem+=Math.max((Number(s.total)||0)-(Number(s.received)||0),0);});
+  document.getElementById('salRecv').textContent=fmt(recv);
+  document.getElementById('salRem').textContent=fmt(rem);
+  document.getElementById('salCount').textContent=sals.length;
+  if(!sals.length){ el.innerHTML=emptyState('💵','No salary records yet','Click “Add Salary” to record a driver’s pay.'); return; }
+  const list=sals.filter(s=>!q||(s.first+" "+s.last+" "+s.month+" "+(s.year||"")).toLowerCase().includes(q));
+  let rows=list.map(s=>{
+    const total=Number(s.total)||0, got=Number(s.received)||0, left=total-got;
+    const paid=left<=0.001;
+    const canReceipt=got>0;   // any amount received earns a receipt (full or part payment)
+    return `<tr>
+      <td><b>${esc(s.first)} ${esc(s.last)}</b></td>
+      <td>${esc(s.month)} ${esc(s.year||'')}</td>
+      <td class="money">${fmt(total)}</td>
+      <td class="money green">${fmt(got)}</td>
+      <td class="money ${paid?'green':'red'}">${fmt(Math.max(left,0))}</td>
+      <td><span class="badge ${paid?'b-green':'b-red'}"><span class="dot"></span>${paid?'Paid':'Owed'}</span></td>
+      <td class="rowact" style="text-align:right;white-space:nowrap">
+        ${canReceipt?`<button class="rcpt" onclick="downloadReceipt('${s.id}')" title="Download PDF receipt">📄 Receipt</button>`:''}
+        <button onclick="openSal('${s.id}')">✎ Edit</button>
+        <button class="del" onclick="delSal('${s.id}')">🗑</button></td></tr>`;
+  }).join("");
+  el.innerHTML=`<table><thead><tr><th>Driver</th><th>Month</th><th>Total</th><th>Received</th><th>Remaining</th><th>Status</th><th></th></tr></thead><tbody>${rows||emptyRow(7)}</tbody></table>`;
+}
+function fillMonths(){ const sel=document.getElementById('s_month'); sel.innerHTML=MONTHS.map(m=>`<option>${m}</option>`).join(""); }
+function openSal(id){
+  editSalId=id||null;
+  document.getElementById('salModalTitle').textContent=id?'Edit Salary':'Add Salary';
+  fillMonths();
+  const s=id?sals.find(x=>x.id===id):{};
+  s_first.value=s.first||""; s_last.value=s.last||"";
+  document.getElementById('s_month').value=s.month||MONTHS[new Date().getMonth()];
+  s_year.value=s.year||new Date().getFullYear();
+  s_total.value=s.total??""; s_recv.value=s.received??"";
+  updatePreview();
+  document.getElementById('salModal').classList.add('open');
+}
+function updatePreview(){
+  const left=(Number(s_total.value)||0)-(Number(s_recv.value)||0);
+  const p=document.getElementById('s_preview');
+  if(left<=0.001){p.innerHTML='<b style="color:var(--green)">Fully paid ✓</b>';}
+  else{p.innerHTML=`Remaining: <b style="color:var(--red)">${fmt(left)}</b> still owed`;}
+}
+function saveSal(){
+  const first=s_first.value.trim(), last=s_last.value.trim();
+  if(!first||!last){alert('Please enter first and last name.');return;}
+  const data={first,last,month:document.getElementById('s_month').value,year:s_year.value.trim(),
+    total:Number(s_total.value)||0,received:Number(s_recv.value)||0};
+  if(editSalId){Object.assign(sals.find(x=>x.id===editSalId),data);}
+  else{sals.push({id:uid(),...data});}
+  save(); closeModal('salModal'); renderSalaries(); renderDash();
+}
+function delSal(id){ if(confirm('Delete this salary record?')){sals=sals.filter(x=>x.id!==id);save();renderSalaries();renderDash();} }
+
+/* ---------- dashboard ---------- */
+function renderDash(){
+  document.getElementById('sCars').textContent=cars.length;
+  const due=cars.map(c=>({c,s:carStatus(c)})).filter(({s})=>s.d<=WARN_DAYS).sort((a,b)=>a.s.d-b.s.d);
+  document.getElementById('sDue').textContent=due.length;
+  let recv=0,owed=0;
+  sals.forEach(s=>{recv+=Number(s.received)||0; owed+=Math.max((Number(s.total)||0)-(Number(s.received)||0),0);});
+  document.getElementById('sRecv').textContent=fmt(recv);
+  document.getElementById('sOwed').textContent=fmt(owed);
+
+  const banner=document.getElementById('dashAlert');
+  if(due.length){ banner.classList.add('show');
+    document.getElementById('dashAlertText').textContent=`${due.length} car(s) need insurance attention — see below.`;
+  } else banner.classList.remove('show');
+
+  // insurance mini list
+  const il=document.getElementById('dashInsList');
+  if(!due.length){ il.innerHTML=`<div class="empty" style="padding:30px"><div>✓ All insurance is up to date.</div></div>`; }
+  else{ il.innerHTML=`<table><tbody>${due.map(({c,s})=>`<tr class="${s.cls}">
+      <td><b>${esc(c.plate)}</b> <span style="color:var(--muted)">${esc(c.model||c.insurer)||''}</span></td>
+      <td class="money">${dispDate(c.expiry)}</td>
+      <td style="text-align:right"><span class="badge ${s.tag}"><span class="dot"></span>${s.text}</span></td></tr>`).join("")}</tbody></table>`; }
+
+  // salaries owed list
+  const owedList=sals.map(s=>({s,left:(Number(s.total)||0)-(Number(s.received)||0)})).filter(x=>x.left>0.001).sort((a,b)=>b.left-a.left);
+  const sl=document.getElementById('dashSalList');
+  if(!owedList.length){ sl.innerHTML=`<div class="empty" style="padding:30px"><div>✓ No outstanding salary payments.</div></div>`; }
+  else{ sl.innerHTML=`<table><tbody>${owedList.map(({s,left})=>`<tr>
+      <td><b>${esc(s.first)} ${esc(s.last)}</b></td><td style="color:var(--muted)">${esc(s.month)} ${esc(s.year||'')}</td>
+      <td style="text-align:right"><span class="money red">${fmt(left)} owed</span></td></tr>`).join("")}</tbody></table>`; }
+}
+
+/* ---------- backup / restore ---------- */
+function exportData(){
+  const blob=new Blob([JSON.stringify({cars,sals,exported:new Date().toISOString()},null,2)],{type:'application/json'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+  a.download='smart-trans-backup-'+new Date().toISOString().slice(0,10)+'.json'; a.click();
+}
+function importData(input){
+  const f=input.files[0]; if(!f)return;
+  const r=new FileReader();
+  r.onload=()=>{ try{ const d=JSON.parse(r.result);
+    if(!confirm('This will replace all current data with the backup. Continue?'))return;
+    cars=d.cars||[]; sals=d.sals||[]; save(); renderCars(); renderSalaries(); renderDash();
+    alert('Backup restored.');
+  }catch(e){alert('Invalid backup file.');} input.value=""; };
+  r.readAsText(f);
+}
+
+/* ---------- Excel import (cars) ---------- */
+const PLATE_KEYS     = ['plate number','plate','plate / car number','plate/car number','car number','car no','car no.','number','registration','reg','reg no','reg no.','plate no','plate no.'];
+const INSURER_KEYS   = ['insurance company name','insurer','insurance company','company','provider','insurance','insurance provider'];
+const POLICY_KEYS    = ['insurance policy number','policy number','policy no','policy no.','policy #','policy'];
+const ISSUE_KEYS     = ['issuance date','issue date','issued date','date of issue','issued on'];
+const EXPIRY_KEYS    = ['expiry date','insurance expiry date','insurance expiry','insurance expiry (dd/mm/yyyy)','expiry','expiry (dd/mm/yyyy)','expires','expiry date (dd/mm/yyyy)','renewal date','renewal','due date','valid till','valid until'];
+const REGTYPE_KEYS   = ['plate registration type','registration type','reg type','plate type','vehicle type'];
+const COVER_KEYS     = ['policy cover type','cover type','coverage type','cover','coverage','policy type'];
+const SUBPOLICY_KEYS = ['insurance sub policy number','sub policy number','sub-policy number','subpolicy number','sub policy no','sub policy no.','sub policy'];
+const START_KEYS     = ['insurance start date','start date','policy start date','effective date','cover start date','valid from'];
+const MODEL_KEYS     = ['model','car model','vehicle model','make/model','make & model'];
+
+function pad2(n){ return String(n).padStart(2,'0'); }
+function toISO(d){ return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`; }
+function pickCell(row, names){
+  const map={}; Object.keys(row).forEach(k=>{ map[String(k).trim().toLowerCase()] = row[k]; });
+  for(const n of names){ if(n in map && map[n]!=='' && map[n]!=null) return map[n]; }
+  return '';
+}
+function parseExpiry(v){
+  if(v==null || v==='') return '';
+  if(v instanceof Date && !isNaN(v)) return toISO(v);
+  if(typeof v==='number' && isFinite(v)){                 // Excel date serial
+    try{ const o=XLSX.SSF.parse_date_code(v); if(o&&o.y) return `${o.y}-${pad2(o.m)}-${pad2(o.d)}`; }catch(e){}
+  }
+  const s=String(v).trim();
+  let m=s.match(/^(\d{4})[-\/.](\d{1,2})[-\/.](\d{1,2})$/);          // yyyy-mm-dd
+  if(m) return `${m[1]}-${pad2(m[2])}-${pad2(m[3])}`;
+  m=s.match(/^(\d{1,2})[-\/.](\d{1,2})[-\/.](\d{2,4})$/);            // dd/mm/yyyy (app's display format)
+  if(m){ let dd=+m[1], mm=+m[2], yy=+m[3]; if(yy<100) yy+=2000;
+    if(dd>12 && mm<=12){/*ok*/} else if(mm>12 && dd<=12){ const t=dd; dd=mm; mm=t; } // tolerate mm/dd
+    if(mm>=1&&mm<=12&&dd>=1&&dd<=31) return `${yy}-${pad2(mm)}-${pad2(dd)}`; }
+  const d=new Date(s); if(!isNaN(d)) return toISO(d);
+  return '';
+}
+function importCarsExcel(input){
+  const f=input.files[0]; if(!f) return;
+  if(typeof XLSX==='undefined'){ alert('The Excel engine did not load. Please reopen the app.'); input.value=''; return; }
+  const r=new FileReader();
+  r.onload=()=>{
+    try{
+      const wb=XLSX.read(new Uint8Array(r.result),{type:'array',cellDates:true});
+      const ws=wb.Sheets[wb.SheetNames[0]];
+      if(!ws){ alert('That file has no sheets.'); input.value=''; return; }
+      const rows=XLSX.utils.sheet_to_json(ws,{defval:''});
+      let skipped=0; const parsed=[];
+      rows.forEach(row=>{
+        const plate=String(pickCell(row,PLATE_KEYS)).trim();
+        if(!plate){ skipped++; return; }
+        parsed.push({ plate,
+          insurer:String(pickCell(row,INSURER_KEYS)).trim(),
+          policyNo:String(pickCell(row,POLICY_KEYS)).trim(),
+          subPolicyNo:String(pickCell(row,SUBPOLICY_KEYS)).trim(),
+          coverType:String(pickCell(row,COVER_KEYS)).trim(),
+          regType:String(pickCell(row,REGTYPE_KEYS)).trim(),
+          model:String(pickCell(row,MODEL_KEYS)).trim(),
+          issuanceDate:parseExpiry(pickCell(row,ISSUE_KEYS)),
+          startDate:parseExpiry(pickCell(row,START_KEYS)),
+          expiry:parseExpiry(pickCell(row,EXPIRY_KEYS)) });
+      });
+      if(!parsed.length){
+        alert('No cars found.\n\nMake sure the first row has column headings and there is a "Plate" (or "Car number") column with values.\nTip: use the "Excel template" button to get the exact format.');
+        input.value=''; return;
+      }
+      const noDate=parsed.filter(p=>!p.expiry).length;
+      let msg=`Found ${parsed.length} car(s) in "${f.name}".`;
+      if(skipped) msg+=`\nRows skipped (no plate): ${skipped}.`;
+      if(noDate)  msg+=`\nCars with no readable expiry date: ${noDate} (imported as "No date").`;
+      msg+=`\n\nImport now? A plate that already exists will be updated.`;
+      if(!confirm(msg)){ input.value=''; return; }
+      let added=0, updated=0;
+      const FIELDS=['insurer','policyNo','subPolicyNo','coverType','regType','model','issuanceDate','startDate','expiry'];
+      parsed.forEach(p=>{
+        const ex=cars.find(c=>String(c.plate).trim().toLowerCase()===p.plate.toLowerCase());
+        if(ex){ FIELDS.forEach(k=>{ if(p[k]) ex[k]=p[k]; }); updated++; }
+        else{ cars.push({id:uid(),...p}); added++; }
+      });
+      save(); renderCars(); renderDash();
+      alert(`Import complete.\n\nAdded: ${added}\nUpdated: ${updated}\nSkipped (no plate): ${skipped}`);
+    }catch(e){
+      alert('Could not read this file.\nPlease use an .xlsx, .xls or .csv exported from Excel.\n\n('+e.message+')');
+    }
+    input.value='';
+  };
+  r.readAsArrayBuffer(f);
+}
+function downloadCarTemplate(){
+  if(typeof XLSX==='undefined'){ alert('The Excel engine did not load. Please reopen the app.'); return; }
+  const rows=[
+    ['Plate Number','Insurance Company Name','Insurance Policy Number','Issuance Date','Expiry Date','Plate Registration Type','Policy Cover Type','Insurance Sub Policy Number','Insurance Start Date'],
+    ['ABC-1234','AXA','POL-000123','01/01/2026','31/12/2026','Private','Comprehensive','SUB-0045','01/01/2026'],
+    ['XYZ-5678','Allianz','POL-000456','16/03/2026','15/03/2027','Commercial','Third Party','SUB-0091','16/03/2026']];
+  const ws=XLSX.utils.aoa_to_sheet(rows);
+  ws['!cols']=[{wch:14},{wch:22},{wch:22},{wch:14},{wch:14},{wch:22},{wch:18},{wch:24},{wch:18}];
+  const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,'Cars');
+  XLSX.writeFile(wb,'smart-trans-car-template.xlsx');
+}
+
+/* ---------- salary receipt (PDF) ---------- */
+function receiptNo(s){
+  const yr=s.year||new Date().getFullYear();
+  const mi=MONTHS.indexOf(s.month); const mm=mi>=0?pad2(mi+1):'00';
+  return `ST-${yr}${mm}-${String(s.id).slice(-5).toUpperCase()}`;
+}
+function downloadReceipt(id){
+  const s=sals.find(x=>x.id===id); if(!s) return;
+  const total=Number(s.total)||0, got=Number(s.received)||0, left=Math.max(total-got,0);
+  if(got<=0){ alert('No amount has been received for this driver yet, so there is nothing to receipt.'); return; }
+  if(!window.jspdf||!window.jspdf.jsPDF){ alert('The PDF engine did not load. Please reopen the app.'); return; }
+  const paid = (total-got)<=0.001;
+  const { jsPDF }=window.jspdf;
+  const doc=new jsPDF({unit:'pt',format:'a4'});
+  const W=doc.internal.pageSize.getWidth();
+  const M=56, ink=[28,37,54], muted=[107,118,137], green=[22,163,74], red=[220,38,38], amber=[194,120,3], line=[231,235,243];
+  const accent = paid ? green : amber;
+  // header band
+  doc.setFillColor(15,27,51); doc.rect(0,0,W,96,'F');
+  doc.setFillColor(37,99,235); doc.roundedRect(M,30,38,38,7,7,'F');
+  doc.setTextColor(255,255,255); doc.setFont('helvetica','bold'); doc.setFontSize(16); doc.text('ST',M+19,55,{align:'center'});
+  doc.setFontSize(17); doc.text('Smart Trans',M+52,48);
+  doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.setTextColor(205,214,232); doc.text('Transport Services',M+52,64);
+  doc.setFont('helvetica','bold'); doc.setFontSize(15); doc.setTextColor(255,255,255); doc.text('SALARY RECEIPT',W-M,50,{align:'right'});
+  // meta
+  let y=132; doc.setTextColor(...muted); doc.setFont('helvetica','normal'); doc.setFontSize(10);
+  doc.text('Receipt No.',M,y); doc.text('Date issued',W-M,y,{align:'right'});
+  doc.setTextColor(...ink); doc.setFont('helvetica','bold'); doc.setFontSize(11);
+  doc.text(receiptNo(s),M,y+16);
+  doc.text(new Date().toLocaleDateString(undefined,{day:'numeric',month:'long',year:'numeric'}),W-M,y+16,{align:'right'});
+  // divider
+  y+=40; doc.setDrawColor(...line); doc.setLineWidth(1); doc.line(M,y,W-M,y);
+  // paid-to
+  y+=30; doc.setTextColor(...muted); doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.text('RECEIVED BY (DRIVER)',M,y);
+  doc.setTextColor(...ink); doc.setFont('helvetica','bold'); doc.setFontSize(15); doc.text(`${s.first} ${s.last}`.trim(),M,y+20);
+  doc.setTextColor(...muted); doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.text('PAY PERIOD',W-M,y,{align:'right'});
+  doc.setTextColor(...ink); doc.setFont('helvetica','bold'); doc.setFontSize(13); doc.text(`${s.month} ${s.year||''}`.trim(),W-M,y+20,{align:'right'});
+  // amount box — tint matches status (green = paid, amber = part payment)
+  y+=48;
+  if(paid){ doc.setFillColor(240,253,244); doc.setDrawColor(134,239,172); }
+  else    { doc.setFillColor(255,251,235); doc.setDrawColor(253,224,138); }
+  doc.setLineWidth(1); doc.roundedRect(M,y,W-2*M,86,10,10,'FD');
+  doc.setTextColor(...muted); doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.text('Total salary',M+20,y+26);
+  doc.text('Amount received',M+20,y+52); doc.text('Balance remaining',M+20,y+72);
+  doc.setFont('helvetica','bold');
+  doc.setTextColor(...ink); doc.setFontSize(12); doc.text(fmt(total),W-M-20,y+26,{align:'right'});
+  doc.setTextColor(...green); doc.setFontSize(20); doc.text(fmt(got),W-M-20,y+54,{align:'right'});
+  doc.setTextColor(...(left>0.001?red:ink)); doc.setFontSize(11); doc.text(fmt(left),W-M-20,y+72,{align:'right'});
+  // status stamp
+  y+=118; const stampText = paid ? 'PAID IN FULL' : 'PART PAYMENT';
+  const stampW = paid ? 150 : 158;
+  doc.setDrawColor(...accent); doc.setLineWidth(2); doc.roundedRect(M,y,stampW,34,6,6,'S');
+  doc.setTextColor(...accent); doc.setFont('helvetica','bold'); doc.setFontSize(14); doc.text(stampText,M+stampW/2,y+22,{align:'center'});
+  // signature
+  doc.setDrawColor(...line); doc.setLineWidth(1); doc.line(W-M-180,y+28,W-M,y+28);
+  doc.setTextColor(...muted); doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.text('Authorised signature',W-M-90,y+42,{align:'center'});
+  // footer
+  const fy=doc.internal.pageSize.getHeight()-56;
+  doc.setDrawColor(...line); doc.line(M,fy-14,W-M,fy-14);
+  doc.setTextColor(...muted); doc.setFontSize(9);
+  const note = paid
+    ? 'This receipt confirms the salary above was paid in full. Generated by Smart Trans.'
+    : `This receipt confirms a part payment of ${fmt(got)} was received; ${fmt(left)} remains outstanding. Generated by Smart Trans.`;
+  doc.text(note,M,fy);
+  doc.text('Generated '+new Date().toLocaleString(),W-M,fy,{align:'right'});
+  const safe=`${s.first}_${s.last}_${s.month}_${s.year||''}`.replace(/[^A-Za-z0-9_\-]+/g,'_').replace(/_+/g,'_');
+  doc.save(`Smart-Trans-Receipt_${safe}.pdf`);
+}
+
+/* ---------- helpers ---------- */
+function closeModal(id){ document.getElementById(id).classList.remove('open'); }
+function emptyState(icon,t,s){ return `<div class="empty"><div class="big">${icon}</div><div style="font-weight:600;color:var(--ink)">${t}</div><div>${s}</div></div>`; }
+function emptyRow(c){ return `<tr><td colspan="${c}" class="empty" style="padding:30px">No matches.</td></tr>`; }
+['s_total','s_recv'].forEach(id=>document.addEventListener('input',e=>{if(e.target.id===id)updatePreview();}));
+document.querySelectorAll('.overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open');}));
+document.getElementById('todayLine').textContent='Today is '+new Date().toLocaleDateString(undefined,{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+
+fillMonths(); renderCars(); renderSalaries(); renderDash();
+</script>
+</body>
+</html>

@@ -1,0 +1,41 @@
+SMART TRANS — Mac App
+=====================
+
+TO INSTALL
+  1. Drag "Smart Trans.app" into your Applications folder.
+
+TO OPEN (first time only)
+  Because the app isn't from the App Store, macOS protects you on first launch:
+  • RIGHT-CLICK "Smart Trans.app"  →  choose "Open"  →  click "Open" again.
+  (After this first time, just double-click it normally.)
+
+  If you still see "cannot be opened":
+  • Open System Settings → Privacy & Security → scroll down → click
+    "Open Anyway" next to Smart Trans, then open it again.
+
+WHAT IT DOES
+  • Works 100% offline. No internet, no install, no Terminal.
+  • Opens in a clean app window and saves your data automatically on this Mac.
+  • Car Insurance turns RED when it expires or is within 10 days.
+  • Driver Salaries show RECEIVED in green and REMAINING in red.
+
+IMPORT CAR INSURANCE FROM EXCEL
+  • On the Car Insurance screen, click "Import Excel" to add many cars at once
+    from an .xlsx, .xls or .csv file.
+  • Click "Excel template" first to get a file with the exact columns:
+      Plate Number, Insurance Company Name, Insurance Policy Number,
+      Issuance Date, Expiry Date, Plate Registration Type,
+      Policy Cover Type, Insurance Sub Policy Number, Insurance Start Date.
+  • Every detail above is saved and can be viewed/edited by clicking a car.
+  • A plate that already exists is updated instead of duplicated.
+
+SALARY RECEIPTS (PDF)
+  • Any time a driver has received an amount, a "Receipt" button appears on
+    that row. Click it to download a PDF receipt showing total salary, amount
+    received and balance remaining.
+  • Full payment is stamped "PAID IN FULL"; a partial payment is stamped
+    "PART PAYMENT" and shows the outstanding balance.
+
+BACKUP
+  Use the "Backup" button (top-right) to save a copy of your data,
+  and "Restore" to load it back — e.g. when moving to a new Mac.

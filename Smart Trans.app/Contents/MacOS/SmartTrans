@@ -1,0 +1,36 @@
+#!/bin/bash
+# Smart Trans launcher: serve the app locally, open a clean window, keep alive.
+DIR="$(cd "$(dirname "$0")/../Resources" && pwd)"
+PORT=8790
+URL="http://127.0.0.1:${PORT}/index.html"
+PROFILE="$HOME/Library/Application Support/SmartTrans/chrome"
+
+export ST_ROOT="$DIR"
+
+# Start local server with a runtime that exists on macOS (perl first: no install prompt).
+SRV=""
+if command -v perl >/dev/null 2>&1; then
+  perl "$DIR/server.pl" "$PORT" & SRV=$!
+elif command -v python3 >/dev/null 2>&1; then
+  ( cd "$DIR" && python3 -m http.server "$PORT" --bind 127.0.0.1 ) & SRV=$!
+fi
+
+cleanup(){ [ -n "$SRV" ] && kill "$SRV" 2>/dev/null; }
+trap cleanup EXIT INT TERM
+
+sleep 1
+
+# Prefer a chromeless app-style window if Chrome/Edge exist; else default browser.
+if [ -d "/Applications/Google Chrome.app" ]; then
+  mkdir -p "$PROFILE"
+  open -na "Google Chrome" --args --app="$URL" --user-data-dir="$PROFILE" \
+       --window-size=1180,780 --class=SmartTrans
+elif [ -d "/Applications/Microsoft Edge.app" ]; then
+  mkdir -p "$PROFILE"
+  open -na "Microsoft Edge" --args --app="$URL" --user-data-dir="$PROFILE" --window-size=1180,780
+else
+  open "$URL"
+fi
+
+# Stay running so the app shows in the Dock; quitting the app stops the server.
+if [ -n "$SRV" ]; then wait "$SRV"; else sleep 2; fi
